@@ -1,0 +1,129 @@
+/* ===== Bloke Chat - style.css ===== */
+
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --accent: #238636;
+  --accent-hover: #2ea043;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --bubble: #21262d;
+}
+
+* {
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--text);
+}
+
+#login, #chat {
+  background: var(--card);
+  padding: 24px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 0 24px rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.6s ease;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: var(--text);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.3);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+button:hover {
+  background: var(--accent-hover);
+  transform: scale(1.02);
+}
+
+#messages {
+  height: 300px;
+  overflow-y: auto;
+  background: #0d1117;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #30363d;
+  scroll-behavior: smooth;
+}
+
+.msg {
+  margin: 6px 0;
+  background: var(--bubble);
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.4;
+  font-size: 15px;
+}
+
+.msg strong {
+  color: #58a6ff;
+}
+
+#message {
+  margin-top: 4px;
+}
+
+#roomLabel {
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+}
+
+/* Scrollbar styling */
+#messages::-webkit-scrollbar {
+  width: 6px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

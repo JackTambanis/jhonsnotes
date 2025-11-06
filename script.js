@@ -1,10 +1,10 @@
-// ---------- Firebase Setup ----------
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, push, onValue, update } from "firebase/database";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getAnalytics } from "firebase/analytics";
+// ---------- Firebase CDN Imports ----------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-// Your Firebase config
+// ---------- Firebase Config ----------
 const firebaseConfig = {
   apiKey: "AIzaSyBG6J5vESmji-k5Z1N1h9Ssya6f1aQGgnE",
   authDomain: "bloke-f55ca.firebaseapp.com",
@@ -21,21 +21,30 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 const analytics = getAnalytics(app);
 
-// ---------- DOM Elements ----------
+// ---------- DOM ELEMENTS ----------
 const displayNameInput = document.getElementById('displayName');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const profilePicInput = document.getElementById('profilePic');
 const registerBtn = document.getElementById('registerBtn');
 
+const loginCodeInput = document.getElementById('loginCode');
+const loginBtn = document.getElementById('loginBtn');
+
 const adminDiv = document.getElementById('admin');
 const pendingUsersDiv = document.getElementById('pendingUsers');
 
-const roomInput = document.getElementById('roomCode');
-const joinRoomBtn = document.getElementById('joinRoom');
+const chatDiv = document.getElementById('chat');
+const roomLabel = document.getElementById('roomLabel');
 const messagesDiv = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
+const messageInput = document.getElementById('message');
 const sendMessageBtn = document.getElementById('sendMessage');
+
+const invitePanel = document.getElementById('invitePanel');
+const dmCodeInput = document.getElementById('dmCode');
+const dmBtn = document.getElementById('dmBtn');
+const inviteCodeInput = document.getElementById('inviteCode');
+const sendInviteBtn = document.getElementById('sendInviteBtn');
 
 let currentUser = null;
 let currentRoomID = null;
@@ -52,9 +61,8 @@ registerBtn.onclick = async () => {
   const password = passwordInput.value.trim();
   const file = profilePicInput.files[0];
 
-  if (!displayName || !username || !password || !file) {
-    return alert("Fill all fields and select a profile picture");
-  }
+  if (!displayName || !username || !password || !file) 
+      return alert("Fill all fields and select a profile picture");
 
   const code4digit = generate4DigitCode();
 
@@ -63,37 +71,75 @@ registerBtn.onclick = async () => {
   await uploadBytes(picRef, file);
   const picURL = await getDownloadURL(picRef);
 
-  const newUserRef = push(ref(db, "users"));
-  await set(newUserRef, {
-    displayName,
-    username,
-    password,
-    profilePicURL: picURL,
-    code4digit,
-    approved: false,
-    lastActive: Date.now()
-  });
+  const usersRef = ref(db, "users");
+  let isAdmin = false;
 
-  alert(`Registered! Your 4-digit code: ${code4digit}. Waiting for admin approval.`);
+  // Check if first user
+  onValue(usersRef, async (snapshot) => {
+    const users = snapshot.val() || {};
+    if (Object.keys(users).length === 0) isAdmin = true; // first user = admin
+
+    const newUserRef = push(ref(db, "users"));
+    await set(newUserRef, {
+      displayName,
+      username,
+      password,
+      profilePicURL: picURL,
+      code4digit,
+      approved: isAdmin, // first user auto-approved
+      isAdmin,
+      lastActive: Date.now()
+    });
+
+    alert(`Registered! Your 4-digit code: ${code4digit}.` + 
+          `${isAdmin ? " You are admin and auto-approved." : " Waiting for admin approval."}`);
+  }, { onlyOnce: true });
 };
 
-// ---------- ADMIN APPROVAL ----------
-async function loadPendingUsers() {
-  pendingUsersDiv.innerHTML = "";
+// ---------- LOGIN ----------
+loginBtn.onclick = async () => {
+  const code = loginCodeInput.value.trim();
+  if (!code) return alert("Enter your 4-digit code");
+
   const usersRef = ref(db, "users");
   onValue(usersRef, (snapshot) => {
     const users = snapshot.val() || {};
     for (let userID in users) {
-      if (!users[userID].approved) {
-        const user = users[userID];
+      const user = users[userID];
+      if (user.code4digit == code) {
+        if (!user.approved) return alert("Waiting for admin approval");
+        currentUser = { id: userID, ...user };
+        alert(`Logged in as ${user.username}`);
+
+        loginCodeInput.value = "";
+        showChatUI();
+        trackActiveUser();
+
+        // Show admin panel if user is admin
+        if (user.isAdmin) loadPendingUsers();
+        return;
+      }
+    }
+    alert("Invalid code");
+  }, { onlyOnce: true });
+};
+
+// ---------- ADMIN PANEL ----------
+function loadPendingUsers() {
+  adminDiv.style.display = "block";
+  pendingUsersDiv.innerHTML = "";
+  const usersRef = ref(db, "users");
+  onValue(usersRef, (snapshot) => {
+    const users = snapshot.val() || {};
+    pendingUsersDiv.innerHTML = "";
+    for (let userID in users) {
+      const user = users[userID];
+      if (!user.approved) {
         const div = document.createElement('div');
-        div.textContent = `${user.username} (${user.displayName})`;
+        div.textContent = `${user.username} (${user.displayName}) `;
         const approveBtn = document.createElement('button');
         approveBtn.textContent = "Approve";
-        approveBtn.onclick = async () => {
-          update(ref(db, `users/${userID}`), { approved: true });
-          div.remove();
-        };
+        approveBtn.onclick = () => update(ref(db, `users/${userID}`), { approved: true });
         div.appendChild(approveBtn);
         pendingUsersDiv.appendChild(div);
       }
@@ -101,38 +147,16 @@ async function loadPendingUsers() {
   });
 }
 
-// ---------- LOGIN WITH 4-DIGIT CODE ----------
-async function loginWithCode(inputCode) {
+// ---------- CHAT / DM ----------
+function showChatUI() {
+  document.getElementById('register').style.display = "none";
+  chatDiv.style.display = "block";
+  invitePanel.style.display = "block";
+}
+
+function joinDM(targetCode) {
   const usersRef = ref(db, "users");
   onValue(usersRef, (snapshot) => {
-    const users = snapshot.val() || {};
-    for (let userID in users) {
-      const user = users[userID];
-      if (user.code4digit == inputCode) {
-        if (!user.approved) return alert("Waiting for admin approval");
-        currentUser = { id: userID, ...user };
-        trackActiveUser();
-        alert(`Logged in as ${user.username}`);
-        return;
-      }
-    }
-    alert("Invalid code");
-  });
-}
-
-// ---------- ACTIVE USER TRACKING ----------
-function trackActiveUser() {
-  setInterval(() => {
-    if (currentUser) {
-      update(ref(db, `users/${currentUser.id}`), { lastActive: Date.now() });
-    }
-  }, 5000);
-}
-
-// ---------- CREATE / JOIN DM ----------
-async function createDM(targetCode) {
-  const usersRef = ref(db, "users");
-  onValue(usersRef, async (snapshot) => {
     const users = snapshot.val() || {};
     let targetID = null;
     let targetName = "";
@@ -151,11 +175,11 @@ async function createDM(targetCode) {
     set(roomRef, { members: [currentUser.id, targetID] }, { merge: true });
     currentRoomID = roomID;
     listenToRoom(roomID);
-    alert(`DM room ready with ${targetName}`);
-  });
+    roomLabel.innerText = `DM: ${targetName}`;
+    alert(`DM ready with ${targetName}`);
+  }, { onlyOnce: true });
 }
 
-// ---------- LISTEN FOR MESSAGES ----------
 function listenToRoom(roomID) {
   const messagesRef = ref(db, `rooms/${roomID}/messages`);
   onValue(messagesRef, (snapshot) => {
@@ -163,16 +187,16 @@ function listenToRoom(roomID) {
     messagesDiv.innerHTML = "";
     for (let msgID in messages) {
       const msg = messages[msgID];
-      const el = document.createElement('div');
-      el.textContent = `${msg.sender}: ${msg.text}`;
-      if (msg.ping) el.style.background = "#fffa8d";
-      messagesDiv.appendChild(el);
+      const div = document.createElement('div');
+      div.className = "msg";
+      div.textContent = `${msg.sender}: ${msg.text}`;
+      if (msg.ping) div.classList.add("ping");
+      messagesDiv.appendChild(div);
+      div.scrollIntoView();
     }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 }
 
-// ---------- SEND MESSAGE ----------
 sendMessageBtn.onclick = async () => {
   const text = messageInput.value.trim();
   if (!text || !currentRoomID) return;
@@ -184,40 +208,29 @@ sendMessageBtn.onclick = async () => {
     timestamp: Date.now()
   });
   messageInput.value = "";
-};
+}
 
-// ---------- JOIN ROOM / DM ----------
-joinRoomBtn.onclick = async () => {
-  const targetCode = roomInput.value.trim();
-  if (!targetCode) return;
-  createDM(targetCode);
-};
+dmBtn.onclick = () => {
+  const code = dmCodeInput.value.trim();
+  if (!code) return alert("Enter a code");
+  joinDM(code);
+  dmCodeInput.value = "";
+}
 
-// ---------- INVITE SYSTEM ----------
-async function sendInvite(toCode) {
-  const usersRef = ref(db, "users");
-  onValue(usersRef, async (snapshot) => {
-    const users = snapshot.val() || {};
-    let targetID = null;
-    for (let userID in users) {
-      const user = users[userID];
-      if (user.code4digit == toCode && user.approved) {
-        targetID = userID;
-        break;
-      }
-    }
-    if (!targetID) return alert("User not found or not approved");
-
-    const inviteRef = push(ref(db, "invites"));
-    await set(inviteRef, {
-      fromUser: currentUser.id,
-      toUser: targetID,
-      roomID: currentRoomID,
-      status: "pending",
-      timestamp: Date.now()
-    });
-    alert("Invite sent!");
+// ---------- INVITE ----------
+sendInviteBtn.onclick = () => {
+  const code = inviteCodeInput.value.trim();
+  if (!code) return alert("Enter a code");
+  const invitesRef = push(ref(db, "invites"));
+  set(invitesRef, {
+    fromUser: currentUser.id,
+    toCode: code,
+    roomID: currentRoomID,
+    status: "pending",
+    timestamp: Date.now()
   });
+  inviteCodeInput.value = "";
+  alert("Invite sent!");
 }
 
 // Listen for incoming invites
@@ -226,11 +239,20 @@ onValue(invitesRef, (snapshot) => {
   const invites = snapshot.val() || {};
   for (let inviteID in invites) {
     const invite = invites[inviteID];
-    if (currentUser && invite.toUser === currentUser.id && invite.status === "pending") {
-      alert(`You received an invite from ${invite.fromUser}`);
+    if (currentUser && invite.toCode == currentUser.code4digit && invite.status === "pending") {
+      alert(`You received an invite from user ID: ${invite.fromUser}`);
       // Optional: auto-join room
       // currentRoomID = invite.roomID;
       // listenToRoom(currentRoomID);
     }
   }
 });
+
+// ---------- ACTIVE USER TRACKING ----------
+function trackActiveUser() {
+  setInterval(() => {
+    if (currentUser) {
+      update(ref(db, `users/${currentUser.id}`), { lastActive: Date.now() });
+    }
+  }, 5000);
+}

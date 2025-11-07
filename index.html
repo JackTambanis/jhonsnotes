@@ -4,18 +4,242 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Social Messaging App</title>
-<link rel="stylesheet" href="style.css">
+
+<!-- Styles (All-in-One) -->
+<style>
+/* 1. Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 2. Body Styling */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f6fa;
+  color: #2f3640;
+}
+
+/* 3. App Container */
+#app {
+  width: 100%;
+  max-width: 420px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 4. App Header */
+#app h1 {
+  background-color: #4cd137;
+  color: #ffffff;
+  text-align: center;
+  padding: 18px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);
+}
+
+/* 5. Auth Section Container */
+#auth {
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+/* 6. Auth Input Fields */
+#auth input {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #dcdde1;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+#auth input:focus {
+  outline: none;
+  border-color: #4cd137;
+}
+
+/* 7. Auth Buttons */
+#auth button {
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #4cd137;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#auth button:hover {
+  background-color: #44bd32;
+  transform: scale(1.02);
+}
+
+/* 8. Chat Section */
+#chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 450px;
+  background-color: #f1f2f6;
+  border-top: 1px solid #dcdde1;
+  overflow: hidden;
+}
+
+/* 9. Messages Container */
+#messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+/* 10. Individual Messages */
+#messages div {
+  max-width: 75%;
+  padding: 12px 18px;
+  border-radius: 22px;
+  background-color: #dcdde1;
+  word-wrap: break-word;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+/* 11. Current User Messages */
+#messages div.user-msg {
+  background-color: #4cd137;
+  color: #ffffff;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* 12. Input Container */
+#input-container {
+  display: flex;
+  padding: 12px;
+  border-top: 1px solid #dcdde1;
+  background-color: #f9fafb;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 13. Message Input Field */
+#msgInput {
+  flex: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #dcdde1;
+  transition: border-color 0.3s;
+}
+#msgInput:focus {
+  outline: none;
+  border-color: #4cd137;
+}
+
+/* 14. Send Button */
+#sendMsg {
+  width: 80px;
+  padding: 12px;
+  background-color: #4cd137;
+  color: #ffffff;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+#sendMsg:hover {
+  background-color: #44bd32;
+  transform: scale(1.05);
+}
+
+/* 15. Logout Button */
+#logout {
+  padding: 12px;
+  margin: 10px;
+  border-radius: 6px;
+  border: none;
+  background-color: #e84118;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+#logout:hover {
+  background-color: #c23616;
+  transform: scale(1.02);
+}
+
+/* 16. Scrollbar Styling */
+#messages::-webkit-scrollbar {
+  width: 8px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background-color: #4cd137;
+  border-radius: 4px;
+}
+
+/* 17. Hover Effect on Messages */
+#messages div:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+
+/* 18. Responsive */
+@media (max-width: 480px) {
+  #app { width: 95%; }
+  #msgInput { font-size: 0.9rem; }
+  #sendMsg { width: 70px; font-size: 0.9rem; }
+  #messages div { font-size: 0.9rem; padding: 10px 14px; }
+}
+
+/* 19. Smooth Transitions */
+#app, #auth, #chat, #messages, #messages div {
+  transition: all 0.3s ease;
+}
+
+/* 20. Optional Future Avatar Placeholder */
+#messages div::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+  background-color: #bdc3c7;
+}
+</style>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
 </head>
 <body>
 <div id="app">
   <h1>Social Messaging App</h1>
 
+  <!-- Auth Section -->
   <div id="auth">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
@@ -23,16 +247,101 @@
     <button id="login">Log In</button>
   </div>
 
+  <!-- Chat Section -->
   <div id="chat" style="display:none;">
     <div id="messages"></div>
     <div id="input-container">
       <input type="text" id="msgInput" placeholder="Type a message">
       <button id="sendMsg">Send</button>
     </div>
-    <button id="logout" style="margin:10px;">Log Out</button>
+    <button id="logout">Log Out</button>
   </div>
 </div>
 
-<script src="script.js"></script>
+<!-- Script -->
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBG6J5vESmji-k5Z1N1h9Ssya6f1aQGgnE",
+  authDomain: "bloke-f55ca.firebaseapp.com",
+  databaseURL: "https://bloke-f55ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bloke-f55ca",
+  storageBucket: "bloke-f55ca.firebasestorage.app",
+  messagingSenderId: "480383058927",
+  appId: "1:480383058927:web:5c7b6cd56f82536f01ec1a"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// UI Elements
+const signupBtn = document.getElementById('signup');
+const loginBtn = document.getElementById('login');
+const logoutBtn = document.getElementById('logout');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const chatDiv = document.getElementById('chat');
+const authDiv = document.getElementById('auth');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendMsg');
+const messagesDiv = document.getElementById('messages');
+
+// Sign Up
+signupBtn.addEventListener('click', () => {
+  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+    .then(() => alert("Signed Up!"))
+    .catch(err => alert(err.message));
+});
+
+// Log In
+loginBtn.addEventListener('click', () => {
+  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
+    .then(() => {
+      authDiv.style.display = 'none';
+      chatDiv.style.display = 'flex';
+      loadMessages();
+    })
+    .catch(err => alert(err.message));
+});
+
+// Log Out
+logoutBtn.addEventListener('click', () => {
+  auth.signOut().then(() => {
+    chatDiv.style.display = 'none';
+    authDiv.style.display = 'flex';
+    messagesDiv.innerHTML = '';
+  });
+});
+
+// Send Message
+sendBtn.addEventListener('click', () => {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  db.ref('messages').push({
+    text,
+    uid: auth.currentUser.uid,
+    timestamp: Date.now()
+  });
+  msgInput.value = '';
+});
+
+// Load Messages
+function loadMessages() {
+  db.ref('messages').orderByChild('timestamp').on('value', snapshot => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach(child => {
+      const msg = child.val();
+      const div = document.createElement('div');
+      div.textContent = msg.text;
+      if (msg.uid === auth.currentUser.uid) div.classList.add('user-msg');
+      messagesDiv.appendChild(div);
+    });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+</script>
+
 </body>
 </html>

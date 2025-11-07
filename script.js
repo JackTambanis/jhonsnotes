@@ -13,41 +13,53 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.database(); // Realtime Database
+const db = firebase.database();
 
-// Auth elements
+// UI elements
 const signupBtn = document.getElementById('signup');
 const loginBtn = document.getElementById('login');
+const logoutBtn = document.getElementById('logout');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const chatDiv = document.getElementById('chat');
 const authDiv = document.getElementById('auth');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendMsg');
+const messagesDiv = document.getElementById('messages');
 
+// Sign Up
 signupBtn.addEventListener('click', () => {
   auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
     .then(() => alert("Signed Up!"))
     .catch(err => alert(err.message));
 });
 
+// Log In
 loginBtn.addEventListener('click', () => {
   auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
     .then(() => {
       authDiv.style.display = 'none';
-      chatDiv.style.display = 'block';
+      chatDiv.style.display = 'flex';
       loadMessages();
     })
     .catch(err => alert(err.message));
 });
 
-// Messaging
-const msgInput = document.getElementById('msgInput');
-const sendBtn = document.getElementById('sendMsg');
-const messagesDiv = document.getElementById('messages');
+// Log Out
+logoutBtn.addEventListener('click', () => {
+  auth.signOut().then(() => {
+    chatDiv.style.display = 'none';
+    authDiv.style.display = 'flex';
+    messagesDiv.innerHTML = '';
+  });
+});
 
+// Send Message
 sendBtn.addEventListener('click', () => {
-  if (msgInput.value.trim() === "") return;
+  const text = msgInput.value.trim();
+  if (!text) return;
   const newMsg = {
-    text: msgInput.value,
+    text,
     uid: auth.currentUser.uid,
     timestamp: Date.now()
   };
@@ -55,7 +67,7 @@ sendBtn.addEventListener('click', () => {
   msgInput.value = '';
 });
 
-// Real-time listener
+// Load Messages
 function loadMessages() {
   db.ref('messages').orderByChild('timestamp').on('value', snapshot => {
     messagesDiv.innerHTML = '';
@@ -63,7 +75,9 @@ function loadMessages() {
       const msg = childSnapshot.val();
       const msgEl = document.createElement('div');
       msgEl.textContent = msg.text;
+      if (msg.uid === auth.currentUser.uid) msgEl.classList.add('user-msg');
       messagesDiv.appendChild(msgEl);
     });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 }

@@ -3,287 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Messenger Clone</title>
+<title>BPS Chat</title>
 
 <!-- Styles -->
 <style>
-/* ====== Global Reset ====== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-}
+/* ===== Global Reset ===== */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Helvetica Neue',Arial,sans-serif; }
+body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:#e5ddd5; color:#2f2f2f; transition:0.3s; }
+body.dark-mode { background:#18191a; color:#e4e6eb; }
 
-/* ====== Body ====== */
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #e5ddd5;
-  color: #2f2f2f;
-  transition: background 0.3s ease;
-}
+#app { width:100%; max-width:500px; height:95vh; background:#fff; border-radius:10px; box-shadow:0 12px 25px rgba(0,0,0,0.15); display:flex; flex-direction:column; overflow:hidden; transition:0.3s; }
+body.dark-mode #app { background:#242526; }
 
-/* ====== App Container ====== */
-#app {
-  width: 100%;
-  max-width: 420px;
-  height: 90vh;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
+h1 { background:linear-gradient(90deg,#0084ff,#006bbf); color:#fff; text-align:center; font-weight:bold; font-size:1.6rem; padding:15px; letter-spacing:0.5px; }
 
-/* ====== Header ====== */
-#app h1 {
-  background: linear-gradient(90deg, #0084ff, #006bbf);
-  color: #fff;
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.5rem;
-  padding: 15px;
-  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);
-  letter-spacing: 0.5px;
-}
+#auth,#profile,#users,#chat,#groupChat { padding:20px; display:flex; flex-direction:column; gap:15px; background:#fff; animation:fadeIn 0.5s ease forwards; }
+body.dark-mode #auth,#profile,#users,#chat,#groupChat { background:#242526; }
 
-/* ====== Auth Section ====== */
-#auth {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  background-color: #fff;
-  animation: fadeIn 0.5s ease forwards;
-}
+input,select,textarea { padding:12px 15px; border-radius:8px; border:1px solid #ccd0d5; font-size:1rem; transition:0.3s; }
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea { background:#3a3b3c; border:1px solid #555657; color:#e4e6eb; }
+input:focus,textarea:focus,select:focus { outline:none; border-color:#0084ff; box-shadow:0 0 8px rgba(0,132,255,0.4); background:#fffdfd; }
 
-/* ====== Input Fields ====== */
-#auth input, #msgInput {
-  padding: 12px 15px;
-  border-radius: 8px;
-  border: 1px solid #ccd0d5;
-  font-size: 1rem;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-#auth input:focus, #msgInput:focus {
-  outline: none;
-  border-color: #0084ff;
-  box-shadow: 0 0 8px rgba(0,132,255,0.4);
-  background-color: #fffdfd;
-}
+button { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; transition:all 0.3s ease; }
+#signup,#login,#sendMsg,#updateProfile,#createGroup,#logout,#darkModeBtn { background:#0084ff;color:#fff; }
+#signup:hover,#login:hover,#sendMsg:hover,#updateProfile:hover,#createGroup:hover{ background:#006bbf; transform:scale(1.03); }
+#logout { background:#f02849;color:#fff; } 
+#logout:hover { background:#d0193f; transform:scale(1.03); }
+#darkModeBtn { background:#4f4f4f;color:#fff; } 
+#darkModeBtn:hover { background:#2c2c2c; transform:scale(1.02); }
 
-/* ====== Buttons ====== */
-#auth button, #sendMsg, #logout, #darkModeBtn {
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-#auth button, #sendMsg {
-  background-color: #0084ff;
-  color: #fff;
-}
-#auth button:hover, #sendMsg:hover {
-  background-color: #006bbf;
-  transform: scale(1.03);
-}
-#logout {
-  background-color: #f02849;
-  color: #fff;
-}
-#logout:hover {
-  background-color: #d0193f;
-  transform: scale(1.03);
-}
-#darkModeBtn {
-  background-color: #4f4f4f;
-  color: #fff;
-}
-#darkModeBtn:hover {
-  background-color: #2c2c2c;
-  transform: scale(1.02);
-}
+#chat,#groupChat { flex:1; display:flex; flex-direction:column; background:#f0f2f5; overflow:hidden; }
+body.dark-mode #chat,#groupChat { background:#3a3b3c; }
 
-/* ====== Chat Section ====== */
-#chat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: #f0f2f5;
-  overflow: hidden;
-  animation: fadeIn 0.6s ease forwards;
-}
+#messages,#groupMessages { flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; scroll-behavior:smooth; }
+#messages::-webkit-scrollbar,#groupMessages::-webkit-scrollbar{ width:8px; }
+#messages::-webkit-scrollbar-thumb,#groupMessages::-webkit-scrollbar-thumb{ background:#ccd0d5; border-radius:4px; }
+body.dark-mode #messages::-webkit-scrollbar-thumb,body.dark-mode #groupMessages::-webkit-scrollbar-thumb { background:#555657; }
 
-/* ====== Messages Container ====== */
-#messages {
-  flex: 1;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
+#messages div,#groupMessages div { max-width:75%; padding:14px 18px; border-radius:20px; background:#e4e6eb; word-wrap:break-word; font-size:0.95rem; position:relative; opacity:0; animation:slideUp 0.5s forwards; }
+#messages div.user-msg,#groupMessages div.user-msg { background:linear-gradient(135deg,#0084ff,#006bbf); color:#fff; margin-left:auto; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
 
-/* ====== Individual Message Bubble ====== */
-#messages div {
-  max-width: 75%;
-  padding: 14px 18px;
-  border-radius: 20px;
-  background-color: #e4e6eb;
-  word-wrap: break-word;
-  font-size: 0.95rem;
-  position: relative;
-  transition: all 0.3s ease, transform 0.2s ease;
-  opacity: 0;
-  animation: slideUp 0.5s forwards;
-}
+#messages div:hover::after,#groupMessages div:hover::after { content:'👍 ❤️ 😂 😮 😢 😡'; font-size:1rem; position:absolute; top:-20px; right:0; background:#fff; border-radius:20px; padding:2px 6px; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; }
+body.dark-mode #messages div:hover::after,body.dark-mode #groupMessages div:hover::after{ background:#3a3b3c; }
 
-/* ====== User Message Bubble ====== */
-#messages div.user-msg {
-  background-color: #0084ff;
-  color: #fff;
-  margin-left: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
+#messages div::after,#groupMessages div::after{ content:attr(data-time); font-size:0.7rem; color:#7a7a7a; position:absolute; bottom:-16px; right:10px; }
 
-/* ====== Bubble Hover ====== */
-#messages div:hover {
-  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-  transform: translateY(-2px);
-}
+#messages div::before,#groupMessages div::before{ content:''; width:32px; height:32px; border-radius:50%; background:#b0b3b8; display:inline-block; margin-right:10px; vertical-align:middle; }
 
-/* ====== Input Container ====== */
-#input-container {
-  display: flex;
-  padding: 12px 15px;
-  background-color: #fff;
-  border-top: 1px solid #ccd0d5;
-  gap: 10px;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.08);
-}
+#typing,#groupTyping{ font-size:0.85rem; color:#7a7a7a; padding-left:12px; margin-bottom:5px; font-style:italic; }
 
-/* ====== Message Input Field ====== */
-#msgInput {
-  flex: 1;
-  border-radius: 20px;
-  border: 1px solid #ccd0d5;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-}
+#input-container,#groupInputContainer{ display:flex; padding:12px 15px; background:#fff; border-top:1px solid #ccd0d5; gap:10px; box-shadow:0 -2px 5px rgba(0,0,0,0.08); }
+body.dark-mode #input-container,body.dark-mode #groupInputContainer { background:#242526; }
 
-/* ====== Send Button ====== */
-#sendMsg {
-  width: 80px;
-  background: linear-gradient(90deg, #0084ff, #006bbf);
-  color: #fff;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-}
-#sendMsg:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0,132,255,0.3);
-}
+#msgInput,#groupMsgInput{ flex:1; border-radius:20px; border:1px solid #ccd0d5; font-size:1rem; outline:none; }
+#sendMsg,#sendGroupMsg{ width:80px; border-radius:20px; background:linear-gradient(90deg,#0084ff,#006bbf); color:#fff; font-weight:bold; border:none; cursor:pointer; transition:0.2s ease; }
+#sendMsg:hover,#sendGroupMsg:hover{ transform:scale(1.05); box-shadow:0 4px 12px rgba(0,132,255,0.3); }
 
-/* ====== Scrollbar Styling ====== */
-#messages::-webkit-scrollbar {
-  width: 8px;
-}
-#messages::-webkit-scrollbar-thumb {
-  background-color: #ccd0d5;
-  border-radius: 4px;
-}
+@keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+@keyframes slideUp{ from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
 
-/* ====== Avatar Placeholder ====== */
-#messages div::before {
-  content: '';
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #b0b3b8;
-  display: inline-block;
-  margin-right: 10px;
-  vertical-align: middle;
-}
-
-/* ====== Timestamps ====== */
-#messages div::after {
-  content: attr(data-time);
-  font-size: 0.7rem;
-  color: #7a7a7a;
-  position: absolute;
-  bottom: -16px;
-  right: 10px;
-}
-
-/* ====== Reactions Bubble ====== */
-#messages div:hover::after {
-  content: '👍 ❤️ 😂 😮 😢 😡';
-  font-size: 1rem;
-  position: absolute;
-  top: -20px;
-  right: 0;
-  background: #fff;
-  border-radius: 20px;
-  padding: 2px 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* ====== Typing Indicator ====== */
-#typing {
-  font-size: 0.85rem;
-  color: #7a7a7a;
-  padding-left: 12px;
-  margin-bottom: 5px;
-  font-style: italic;
-}
-
-/* ====== Animation Keyframes ====== */
-@keyframes fadeIn { from {opacity: 0} to {opacity:1} }
-@keyframes slideUp { from {opacity:0; transform: translateY(20px);} to {opacity:1; transform:translateY(0);} }
-
-/* ====== Responsive Adjustments ====== */
-@media(max-width:480px){
-  #app { width: 95%; height: 95vh; }
-  #msgInput { font-size: 0.9rem; padding: 10px 12px; }
-  #sendMsg { width: 70px; font-size: 0.9rem; padding: 10px; }
-  #messages div { font-size: 0.9rem; padding: 10px 14px; }
-}
-
-/* ====== Dark Mode Option ====== */
-body.dark-mode {
-  background-color: #18191a;
-  color: #e4e6eb;
-}
-body.dark-mode #app { background-color: #242526; }
-body.dark-mode #auth input, body.dark-mode #msgInput {
-  background-color: #3a3b3c; border: 1px solid #555657; color: #e4e6eb;
-}
-body.dark-mode #messages div { background-color: #3a3b3c; color: #e4e6eb; }
-body.dark-mode #messages div.user-msg { background-color: #0084ff; color: #fff; }
-body.dark-mode #input-container { background-color: #242526; }
-
-/* ====== Shadow Depth ====== */
-#messages div, #auth button, #sendMsg, #logout {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-}
-
-/* ====== Optional Gradients on Messages ====== */
-#messages div.user-msg {
-  background: linear-gradient(135deg, #0084ff, #006bbf);
-}
+@media(max-width:480px){ #app{width:95%;height:95vh;} #msgInput,#groupMsgInput{font-size:0.9rem;padding:10px 12px;} #sendMsg,#sendGroupMsg{width:70px;font-size:0.9rem;padding:10px;} #messages div,#groupMessages div{font-size:0.9rem;padding:10px 14px;} }
 </style>
 
 <!-- Firebase SDK -->
@@ -295,10 +74,11 @@ body.dark-mode #input-container { background-color: #242526; }
 <body>
 
 <div id="app">
-  <h1>Messenger Clone</h1>
+  <h1>BPS Chat</h1>
 
-  <!-- Auth Section -->
+  <!-- Auth -->
   <div id="auth">
+    <input type="text" id="displayName" placeholder="Display Name">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button id="signup">Sign Up</button>
@@ -306,7 +86,21 @@ body.dark-mode #input-container { background-color: #242526; }
     <button id="darkModeBtn">Toggle Dark Mode</button>
   </div>
 
-  <!-- Chat Section -->
+  <!-- Profile -->
+  <div id="profile" style="display:none;">
+    <input type="text" id="bio" placeholder="Bio">
+    <input type="url" id="avatarURL" placeholder="Avatar URL">
+    <button id="updateProfile">Update Profile</button>
+    <button id="goToUsers">Find Users</button>
+  </div>
+
+  <!-- Users -->
+  <div id="users" style="display:none;">
+    <input type="text" id="searchUser" placeholder="Search users...">
+    <div id="userList"></div>
+  </div>
+
+  <!-- Chat -->
   <div id="chat" style="display:none;">
     <div id="typing"></div>
     <div id="messages"></div>
@@ -316,9 +110,21 @@ body.dark-mode #input-container { background-color: #242526; }
     </div>
     <button id="logout">Log Out</button>
   </div>
+
+  <!-- Group Chat -->
+  <div id="groupChat" style="display:none;">
+    <input type="text" id="groupName" placeholder="Group Name">
+    <button id="createGroup">Create Group</button>
+    <div id="groupList"></div>
+    <div id="groupTyping"></div>
+    <div id="groupMessages"></div>
+    <div id="groupInputContainer">
+      <input type="text" id="groupMsgInput" placeholder="Type a group message">
+      <button id="sendGroupMsg">Send</button>
+    </div>
+  </div>
 </div>
 
-<!-- Script -->
 <script>
 // Firebase config
 const firebaseConfig = {
@@ -331,96 +137,159 @@ const firebaseConfig = {
   appId: "1:480383058927:web:5c7b6cd56f82536f01ec1a"
 };
 
-// Initialize Firebase
+// Init Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
 // Elements
+const authDiv = document.getElementById('auth');
+const profileDiv = document.getElementById('profile');
+const usersDiv = document.getElementById('users');
+const chatDiv = document.getElementById('chat');
+const groupChatDiv = document.getElementById('groupChat');
+
 const signupBtn = document.getElementById('signup');
 const loginBtn = document.getElementById('login');
 const logoutBtn = document.getElementById('logout');
 const darkModeBtn = document.getElementById('darkModeBtn');
+const displayNameInput = document.getElementById('displayName');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
-const authDiv = document.getElementById('auth');
-const chatDiv = document.getElementById('chat');
+const bioInput = document.getElementById('bio');
+const avatarInput = document.getElementById('avatarURL');
+const updateProfileBtn = document.getElementById('updateProfile');
+const goToUsersBtn = document.getElementById('goToUsers');
+const searchUserInput = document.getElementById('searchUser');
+const userListDiv = document.getElementById('userList');
+
 const msgInput = document.getElementById('msgInput');
 const sendBtn = document.getElementById('sendMsg');
 const messagesDiv = document.getElementById('messages');
 const typingDiv = document.getElementById('typing');
 
-// ====== Dark Mode Toggle ======
-darkModeBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-});
+const groupNameInput = document.getElementById('groupName');
+const createGroupBtn = document.getElementById('createGroup');
+const groupListDiv = document.getElementById('groupList');
+const groupMsgInput = document.getElementById('groupMsgInput');
+const sendGroupBtn = document.getElementById('sendGroupMsg');
+const groupMessagesDiv = document.getElementById('groupMessages');
+const groupTypingDiv = document.getElementById('groupTyping');
 
-// ====== Sign Up ======
-signupBtn.addEventListener('click', () => {
-  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
-    .then(() => alert("Signed Up!"))
-    .catch(err => alert(err.message));
-});
+// Dark Mode
+darkModeBtn.addEventListener('click',()=>document.body.classList.toggle('dark-mode'));
 
-// ====== Log In ======
-loginBtn.addEventListener('click', () => {
-  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
-    .then(() => {
-      authDiv.style.display = 'none';
-      chatDiv.style.display = 'flex';
-      loadMessages();
+// Sign Up
+signupBtn.addEventListener('click',()=>{
+  auth.createUserWithEmailAndPassword(emailInput.value,passwordInput.value)
+    .then(res=>{
+      const uid=res.user.uid;
+      db.ref('users/'+uid).set({displayName:displayNameInput.value,email:emailInput.value,bio:'',avatar:'',uid});
+      alert("Signed Up! Now update profile");
+      authDiv.style.display='none';
+      profileDiv.style.display='flex';
     })
-    .catch(err => alert(err.message));
+    .catch(err=>alert(err.message));
 });
 
-// ====== Log Out ======
-logoutBtn.addEventListener('click', () => {
-  auth.signOut().then(() => {
-    chatDiv.style.display = 'none';
-    authDiv.style.display = 'flex';
-    messagesDiv.innerHTML = '';
+// Log In
+loginBtn.addEventListener('click',()=>{
+  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value)
+    .then(res=>{
+      authDiv.style.display='none';
+      profileDiv.style.display='flex';
+      loadProfile();
+    })
+    .catch(err=>alert(err.message));
+});
+
+// Log Out
+logoutBtn.addEventListener('click',()=>{
+  auth.signOut().then(()=>{
+    authDiv.style.display='flex';
+    profileDiv.style.display='none';
+    usersDiv.style.display='none';
+    chatDiv.style.display='none';
+    groupChatDiv.style.display='none';
+    messagesDiv.innerHTML='';
+    groupMessagesDiv.innerHTML='';
   });
 });
 
-// ====== Send Message ======
-sendBtn.addEventListener('click', sendMessage);
-msgInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') sendMessage();
+// Update Profile
+updateProfileBtn.addEventListener('click',()=>{
+  const uid=auth.currentUser.uid;
+  db.ref('users/'+uid).update({bio:bioInput.value,avatar:avatarInput.value});
+  alert('Profile Updated!');
 });
 
-function sendMessage() {
-  const text = msgInput.value.trim();
-  if (!text) return;
-  const uid = auth.currentUser.uid;
-  const timestamp = Date.now();
-  db.ref('messages').push({text, uid, timestamp});
-  msgInput.value = '';
+// Load Profile
+function loadProfile(){
+  const uid=auth.currentUser.uid;
+  db.ref('users/'+uid).once('value').then(snap=>{
+    const data=snap.val();
+    displayNameInput.value=data.displayName;
+    bioInput.value=data.bio||'';
+    avatarInput.value=data.avatar||'';
+  });
 }
 
-// ====== Load Messages ======
-function loadMessages() {
-  db.ref('messages').orderByChild('timestamp').on('value', snapshot => {
-    messagesDiv.innerHTML = '';
-    snapshot.forEach(child => {
-      const msg = child.val();
-      const div = document.createElement('div');
-      div.textContent = msg.text;
-      div.setAttribute('data-time', new Date(msg.timestamp).toLocaleTimeString());
-      if (msg.uid === auth.currentUser.uid) div.classList.add('user-msg');
+// Search Users
+goToUsersBtn.addEventListener('click',()=>{
+  profileDiv.style.display='none';
+  usersDiv.style.display='flex';
+  loadUsers();
+});
+
+function loadUsers(){
+  db.ref('users').on('value',snap=>{
+    userListDiv.innerHTML='';
+    const users=snap.val();
+    for(let uid in users){
+      if(uid!==auth.currentUser.uid){
+        const div=document.createElement('div');
+        div.textContent=users[uid].displayName;
+        div.style.cursor='pointer';
+        div.addEventListener('click',()=>startDM(uid,users[uid].displayName));
+        userListDiv.appendChild(div);
+      }
+    }
+  });
+}
+
+// Start Direct Message
+function startDM(uid,displayName){
+  usersDiv.style.display='none';
+  chatDiv.style.display='flex';
+  messagesDiv.innerHTML='';
+  const chatId=[auth.currentUser.uid,uid].sort().join('_');
+  db.ref('messages/'+chatId).on('value',snap=>{
+    messagesDiv.innerHTML='';
+    const msgs=snap.val();
+    for(let key in msgs){
+      const msg=msgs[key];
+      const div=document.createElement('div');
+      div.textContent=msg.text;
+      div.setAttribute('data-time',new Date(msg.timestamp).toLocaleTimeString());
+      if(msg.uid===auth.currentUser.uid) div.classList.add('user-msg');
       messagesDiv.appendChild(div);
-    });
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
   });
+
+  sendBtn.onclick=()=>sendDM(chatId);
+  msgInput.onkeypress=(e)=>{if(e.key==='Enter') sendDM(chatId);}
 }
 
-// ====== Typing Indicator (Simulated) ======
-msgInput.addEventListener('input', () => {
-  if (msgInput.value.trim()) {
-    typingDiv.textContent = 'You are typing...';
-  } else {
-    typingDiv.textContent = '';
-  }
-});
+function sendDM(chatId){
+  const text=msgInput.value.trim();
+  if(!text) return;
+  db.ref('messages/'+chatId).push({text,uid:auth.currentUser.uid,timestamp:Date.now()});
+  msgInput.value='';
+}
+
+// TODO: Implement group chat, reactions, typing indicators, etc.
+
 </script>
 
 </body>

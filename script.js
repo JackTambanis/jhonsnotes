@@ -1,10 +1,4 @@
-// ===== Bloke Chat - script.js =====
-
-// Import Firebase modules (these will only work if you include type="module" in your HTML)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-// Your Firebase configuration
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBG6J5vESmji-k5Z1N1h9Ssya6f1aQGgnE",
   authDomain: "bloke-f55ca.firebaseapp.com",
@@ -17,53 +11,59 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database(); // Realtime Database
 
-let username = "";
-let room = "";
+// Auth elements
+const signupBtn = document.getElementById('signup');
+const loginBtn = document.getElementById('login');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const chatDiv = document.getElementById('chat');
+const authDiv = document.getElementById('auth');
 
-// ===== Join Chat Room =====
-window.joinChat = function() {
-  username = document.getElementById("username").value.trim();
-  room = document.getElementById("room").value.trim();
-
-  if (!username || !room) {
-    alert("Enter both a username and room code!");
-    return;
-  }
-
-  document.getElementById("login").style.display = "none";
-  document.getElementById("chat").style.display = "flex";
-  document.getElementById("roomLabel").innerText = "Room: " + room;
-
-  const messagesRef = ref(db, "rooms/" + room);
-
-  // Listen for new messages
-  onChildAdded(messagesRef, (snapshot) => {
-    const msg = snapshot.val();
-    const div = document.createElement("div");
-    div.className = "msg";
-    div.innerHTML = `<strong>${msg.user}:</strong> ${msg.text}`;
-    document.getElementById("messages").appendChild(div);
-    div.scrollIntoView();
-  });
-};
-
-// ===== Send Message =====
-window.sendMessage = function() {
-  const text = document.getElementById("message").value.trim();
-  if (!text) return;
-
-  const messagesRef = ref(db, "rooms/" + room);
-  push(messagesRef, { user: username, text });
-
-  document.getElementById("message").value = "";
-};
-
-// ===== Optional: Send with Enter Key =====
-document.addEventListener("keypress", function(e) {
-  if (e.key === "Enter" && document.getElementById("chat").style.display === "flex") {
-    sendMessage();
-  }
+signupBtn.addEventListener('click', () => {
+  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+    .then(() => alert("Signed Up!"))
+    .catch(err => alert(err.message));
 });
+
+loginBtn.addEventListener('click', () => {
+  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
+    .then(() => {
+      authDiv.style.display = 'none';
+      chatDiv.style.display = 'block';
+      loadMessages();
+    })
+    .catch(err => alert(err.message));
+});
+
+// Messaging
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendMsg');
+const messagesDiv = document.getElementById('messages');
+
+sendBtn.addEventListener('click', () => {
+  if (msgInput.value.trim() === "") return;
+  const newMsg = {
+    text: msgInput.value,
+    uid: auth.currentUser.uid,
+    timestamp: Date.now()
+  };
+  db.ref('messages').push(newMsg);
+  msgInput.value = '';
+});
+
+// Real-time listener
+function loadMessages() {
+  db.ref('messages').orderByChild('timestamp').on('value', snapshot => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach(childSnapshot => {
+      const msg = childSnapshot.val();
+      const msgEl = document.createElement('div');
+      msgEl.textContent = msg.text;
+      messagesDiv.appendChild(msgEl);
+    });
+  });
+}

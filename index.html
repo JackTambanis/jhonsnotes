@@ -1,129 +1,130 @@
-/* ===== Bloke Chat - style.css ===== */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloke Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #login, #chat {
+      background: #161b22;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #238636;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      background: #0d1117;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .msg {
+      margin: 5px 0;
+      background: #21262d;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .msg strong {
+      color: #58a6ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Join Chat</h2>
+    <input id="username" placeholder="Enter username" />
+    <input id="room" placeholder="Enter room code" />
+    <button onclick="joinChat()">Join</button>
+  </div>
 
-:root {
-  --bg: #0d1117;
-  --card: #161b22;
-  --accent: #238636;
-  --accent-hover: #2ea043;
-  --text: #e6edf3;
-  --text-muted: #8b949e;
-  --bubble: #21262d;
-}
+  <div id="chat" style="display:none;">
+    <h2 id="roomLabel"></h2>
+    <div id="messages"></div>
+    <input id="message" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
-* {
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-}
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-body {
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  margin: 0;
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSyBG6J5vESmji-k5Z1N1h9Ssya6f1aQGgnE",
+      authDomain: "bloke-f55ca.firebaseapp.com",
+      databaseURL: "https://bloke-f55ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bloke-f55ca",
+      storageBucket: "bloke-f55ca.firebasestorage.app",
+      messagingSenderId: "480383058927",
+      appId: "1:480383058927:web:5c7b6cd56f82536f01ec1a",
+      measurementId: "G-XLN2DQ823C"
+    };
 
-h2 {
-  text-align: center;
-  margin-bottom: 15px;
-  color: var(--text);
-}
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-#login, #chat {
-  background: var(--card);
-  padding: 24px;
-  border-radius: 14px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 0 24px rgba(255,255,255,0.05);
-  display: flex;
-  flex-direction: column;
-  animation: fadeIn 0.6s ease;
-}
+    let username = "";
+    let room = "";
 
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  background: #0d1117;
-  color: var(--text);
-  outline: none;
-}
+    window.joinChat = function() {
+      username = document.getElementById("username").value.trim();
+      room = document.getElementById("room").value.trim();
+      if (!username || !room) return alert("Enter both username and room code!");
 
-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.3);
-}
+      document.getElementById("login").style.display = "none";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("roomLabel").innerText = "Room: " + room;
 
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 15px;
-}
+      const messagesRef = ref(db, "rooms/" + room);
+      onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.className = "msg";
+        div.innerHTML = `<strong>${msg.user}:</strong> ${msg.text}`;
+        document.getElementById("messages").appendChild(div);
+        div.scrollIntoView();
+      });
+    };
 
-button:hover {
-  background: var(--accent-hover);
-  transform: scale(1.02);
-}
-
-#messages {
-  height: 300px;
-  overflow-y: auto;
-  background: #0d1117;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #30363d;
-  scroll-behavior: smooth;
-}
-
-.msg {
-  margin: 6px 0;
-  background: var(--bubble);
-  padding: 10px 12px;
-  border-radius: 10px;
-  line-height: 1.4;
-  font-size: 15px;
-}
-
-.msg strong {
-  color: #58a6ff;
-}
-
-#message {
-  margin-top: 4px;
-}
-
-#roomLabel {
-  text-align: center;
-  margin-bottom: 10px;
-  color: var(--text-muted);
-}
-
-/* Scrollbar styling */
-#messages::-webkit-scrollbar {
-  width: 6px;
-}
-#messages::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 3px;
-}
-
-/* Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    window.sendMessage = function() {
+      const text = document.getElementById("message").value.trim();
+      if (!text) return;
+      const messagesRef = ref(db, "rooms/" + room);
+      push(messagesRef, { user: username, text });
+      document.getElementById("message").value = "";
+    };
+  </script>
+</body>
+</html>

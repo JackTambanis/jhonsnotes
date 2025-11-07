@@ -1,184 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Bloke Chat</title>
-<link rel="stylesheet" href="style.css">
-<style>
-body { font-family: Arial,sans-serif; background:#0d1117; color:#e6edf3; margin:0; }
-header { padding:10px; background:#161b22; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.3);}
-header h1 { margin:0; font-size:1.4rem; color:#58a6ff; }
-.container { display:flex; height:calc(100vh - 50px);}
-.sidebar { width:250px; background:#161b22; padding:10px; overflow-y:auto; }
-.main { flex:1; display:flex; flex-direction:column; background:#0d1117; padding:10px; }
-.contact { display:flex; align-items:center; padding:6px; border-radius:6px; cursor:pointer; margin-bottom:5px; }
-.contact:hover { background:rgba(88,166,255,0.1); }
-.contact .avatar { width:36px; height:36px; border-radius:50%; margin-right:10px; object-fit:cover; }
-.contact .u { font-weight:bold; color:#58a6ff; }
-.contact .mini { font-size:0.8rem; color:rgba(255,255,255,0.7); }
-#chatWindow { flex:1; overflow-y:auto; padding:10px; border-radius:8px; background:#0d1117; margin-bottom:10px; }
-.msg { margin:5px 0; padding:8px; border-radius:6px; background:#21262d; }
-.msg strong { color:#58a6ff; }
-input, button { padding:10px; border:none; border-radius:6px; }
-input { width:100%; margin-bottom:8px; background:#0d1117; color:#e6edf3; }
-button { cursor:pointer; background:#238636; color:white; }
-button:hover { background:#2ea043; }
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10; }
-.modal-content { background:#161b22; padding:20px; border-radius:12px; width:90%; max-width:400px; }
-</style>
-</head>
-<body>
+/* ===== Bloke Chat - style.css ===== */
 
-<header><h1>Bloke Chat</h1><div id="currentUserLabel"></div></header>
-
-<div id="loginModal" class="modal open">
-  <div class="modal-content">
-    <h2>Sign Up / Login</h2>
-    <input id="inputUsername" placeholder="Display Name">
-    <input id="inputCode" placeholder="4-digit code (leave empty to register)">
-    <button id="btnSignUpLogin">Sign Up / Login</button>
-  </div>
-</div>
-
-<div class="container" style="display:none;">
-  <div class="sidebar">
-    <input id="searchContact" placeholder="Search contacts...">
-    <div id="contactsList"></div>
-  </div>
-  <div class="main">
-    <div id="chatWindow"></div>
-    <input id="chatInput" placeholder="Type a message...">
-    <button id="btnSend">Send</button>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, get, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBG6J5vESmji-k5Z1N1h9Ssya6f1aQGgnE",
-  authDomain: "bloke-f55ca.firebaseapp.com",
-  databaseURL: "https://bloke-f55ca-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "bloke-f55ca",
-  storageBucket: "bloke-f55ca.firebasestorage.app",
-  messagingSenderId: "480383058927",
-  appId: "1:480383058927:web:5c7b6cd56f82536f01ec1a",
-  measurementId: "G-XLN2DQ823C"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Global
-let currentUser = null;
-let currentRoomId = null;
-let roomsData = {};
-let usersCache = {};
-
-// Utility
-function generateCode() { return Math.floor(1000 + Math.random() * 9000).toString(); }
-
-// Render contacts
-async function renderContactsList(){
-    const contactsEl = document.getElementById('contactsList');
-    contactsEl.innerHTML = '';
-    for(const id in usersCache){
-        const u = usersCache[id];
-        if(!u.approved) continue;
-        if(id === currentUser.id) continue;
-        const el = document.createElement('div'); el.className='contact';
-        const codeText = currentUser.isAdmin ? `code:${u.code4digit}` : '';
-        el.innerHTML = `<img class="avatar" src="${u.profilePicURL || 'https://via.placeholder.com/36'}"><div style="flex:1"><div class="u">${u.username}</div><div class="mini">${u.displayName}</div></div><div class="meta">${codeText}</div>`;
-        el.onclick = ()=> startDMWith(id, u);
-        contactsEl.appendChild(el);
-    }
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --accent: #238636;
+  --accent-hover: #2ea043;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --bubble: #21262d;
 }
 
-// Load users
-async function loadUsers(){
-    const snapshot = await get(ref(db, 'users'));
-    usersCache = snapshot.val() || {};
-    renderContactsList();
+* {
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
-// Start DM
-function startDMWith(id, userObj){
-    const roomId = [currentUser.id,id].sort().join('_');
-    currentRoomId = roomId;
-    document.getElementById('chatWindow').innerHTML='';
-    if(!roomsData[roomId]){
-        roomsData[roomId]={participants:[currentUser.id,id], messages:[]};
-    }
-    const roomRef = ref(db,'rooms/'+roomId);
-    onChildAdded(roomRef,(snap)=>{
-        const m=snap.val();
-        const div=document.createElement('div');
-        div.className='msg';
-        div.innerHTML=`<strong>${m.user}:</strong> ${m.text}`;
-        document.getElementById('chatWindow').appendChild(div);
-        div.scrollIntoView();
-    });
+body {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
 }
 
-// Send message
-document.getElementById('btnSend').onclick = ()=>{
-    const text = document.getElementById('chatInput').value.trim();
-    if(!text || !currentRoomId) return;
-    push(ref(db,'rooms/'+currentRoomId),{user:currentUser.username,text});
-    document.getElementById('chatInput').value='';
-};
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--text);
+}
 
-// Sign Up / Login
-document.getElementById('btnSignUpLogin').onclick = async ()=>{
-    const uname = document.getElementById('inputUsername').value.trim();
-    let code = document.getElementById('inputCode').value.trim();
-    if(!uname) return alert('Enter a display name');
-    const usersSnap = await get(ref(db,'users'));
-    const users = usersSnap.val() || {};
-    let isNew = false;
-    let userId = null;
+#login, #chat {
+  background: var(--card);
+  padding: 24px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 0 24px rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.6s ease;
+}
 
-    // Check login by code
-    if(code){
-        for(const id in users){
-            if(users[id].code4digit===code){
-                userId=id;
-                break;
-            }
-        }
-        if(!userId) return alert('Invalid code');
-        if(!users[userId].approved) return alert('Waiting for admin approval');
-    }else{
-        // new user
-        code = generateCode();
-        userId = 'user_'+Date.now();
-        isNew=true;
-        const isAdmin = Object.keys(users).length===0;
-        await set(ref(db,'users/'+userId),{username:uname,displayName:uname,approved:isAdmin,code4digit:code,isAdmin:isAdmin});
-    }
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: var(--text);
+  outline: none;
+}
 
-    const snap = await get(ref(db,'users/'+userId));
-    currentUser = snap.val();
-    currentUser.id = userId;
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.3);
+}
 
-    document.getElementById('loginModal').style.display='none';
-    document.querySelector('.container').style.display='flex';
-    document.getElementById('currentUserLabel').innerText=currentUser.username+(currentUser.isAdmin?' (Admin)':'');
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 15px;
+}
 
-    await loadUsers();
-};
+button:hover {
+  background: var(--accent-hover);
+  transform: scale(1.02);
+}
 
-document.getElementById('searchContact').oninput = ()=> {
-    const val = document.getElementById('searchContact').value.toLowerCase();
-    document.querySelectorAll('#contactsList .contact').forEach(el=>{
-        const name = el.querySelector('.u').innerText.toLowerCase();
-        el.style.display=name.includes(val)?'flex':'none';
-    });
-};
+#messages {
+  height: 300px;
+  overflow-y: auto;
+  background: #0d1117;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #30363d;
+  scroll-behavior: smooth;
+}
 
-</script>
-</body>
-</html>
+.msg {
+  margin: 6px 0;
+  background: var(--bubble);
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.4;
+  font-size: 15px;
+}
+
+.msg strong {
+  color: #58a6ff;
+}
+
+#message {
+  margin-top: 4px;
+}
+
+#roomLabel {
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+}
+
+/* Scrollbar styling */
+#messages::-webkit-scrollbar {
+  width: 6px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
